@@ -1,0 +1,43 @@
+# نگه‌دارندهٔ پروژهٔ Supabase فعال — جلوگیری از توقف خودکار پس از ۷ روز بی‌فعالیتی (رایگان)
+# هر ۲ روز یک درخواست کوچک به پایگاه داده می‌زند تا شمارندهٔ بی‌فعالیتی صفر شود.
+#
+# راه‌اندازی (یک‌بار):
+#   ۱) این فایل را در مخزن خود قرار دهید: .github/workflows/supabase-keepalive.yml
+#   ۲) در GitHub → Settings → Secrets and variables → Actions دو مقدار زیر را اضافه کنید:
+#        SUPABASE_URL       = https://zrbvirppydiguwhxlorv.supabase.co
+#        SUPABASE_ANON_KEY  = کلید anon پروژه (همان مقدار داخل settings.js)
+#   ۳) پس از push، در تب Actions می‌توانید دستی هم اجرایش کنید (Run workflow).
+
+name: Supabase Keep-Alive
+
+on:
+  schedule:
+    - cron: '17 6 */2 * *'   # هر ۲ روز، ساعت ۰۶:۱۷ UTC (با کمی فاصله از سقف ۷ روز)
+  workflow_dispatch: {}       # امکان اجرای دستی
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase REST (keeps project active)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "خطا: SUPABASE_URL یا SUPABASE_ANON_KEY تنظیم نشده (در Secrets مخزن اضافه کنید)."
+            exit 1
+          fi
+          # یک درخواست سبک به جدول announcements (برای anon قابل‌خواندن است) → فعالیت ثبت می‌شود
+          code=$(curl -s -o /tmp/resp.txt -w "%{http_code}" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            "$SUPABASE_URL/rest/v1/announcements?select=id&limit=1")
+          echo "HTTP $code"
+          cat /tmp/resp.txt || true
+          # ۲۰۰ یا ۲۰۶ یعنی موفق؛ هر چیز دیگر خطا
+          if [ "$code" != "200" ] && [ "$code" != "206" ]; then
+            echo "هشدار: پاسخ غیرمنتظره. اگر پروژه paused است، اول از داشبورد آن را Restore کنید."
+            exit 1
+          fi
+          echo "✓ پروژهٔ Supabase فعال نگه داشته شد."
