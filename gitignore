@@ -1,0 +1,40 @@
+# APEX Antivirus — .gitignore
+# هدف: هرگز کلیدها، کدهای فروخته‌شده و فایل‌های حجیم به گیت‌هاب نروند
+# (جلوگیری از لو رفتن اسرار و مسدود شدن حساب)
+
+# ---- اسرار حیاتی (هرگز نباید commit شوند) ----
+license-server/keys.json         # کلید خصوصی امضای جواز (Ed25519) — حیاتی
+**/.cards-ledger.json            # فهرست اصلی همهٔ کدهای فروخته‌شده
+cards-output/                    # کارت‌های تولیدشده (کد + SQL)
+*.apexkey                        # فایل‌های کلید آفلاین
+license-server/data/             # پایگاه دادهٔ محلی جوازها
+.env
+.env.*
+*.pem
+*.key
+secrets.*
+
+# ---- وابستگی‌ها و خروجی ساخت ----
+node_modules/
+dist/
+out/
+build/Release/
+*.exe
+*.msi
+*.nsis
+*.blockmap
+
+# ---- دادهٔ موقت/تولیدی ----
+*.log
+logs/
+db/mb-hashes.json                # هش‌های دانلودی MalwareBazaar (در صورت تمایل می‌توانید نگه دارید)
+*.tmp
+.cache/
+
+# ---- سیستم‌عامل / ویرایشگر ----
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp
